@@ -1,0 +1,219 @@
+
+<head>
+	<title>CC Aggregator</title>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="index.css">
+</head>
+
+<body>
+
+	<div id="header">THE CREATIVE COMMONS CHECKOUT COUNTER</div>
+	<div id="music_cont">
+		
+		<div id="now_playing">
+			... Loading 100 tracks from Newgrounds & Soundcloud ...<br/>
+			this will take a while.
+		</div>
+
+		<div style="width:360px; margin:0 auto; overflow:hidden; margin-bottom:20px">
+			<div id="random_track" class="button" onclick="showRandom()">random track</div>
+			<div id="add_to_library" class="button" onclick="addToLibrary()">add to library</div>
+		</div>
+
+		<hr>
+		
+		<div id="library"></div>
+		
+		<hr>
+		
+		<div style="width:430px; margin:0 auto; overflow:hidden">
+			<div id="download_all" class="button" onclick="downloadAll()">download all</div>
+			<div id="attribute_all" class="button" onclick="showAttribution()">get attribution json</div>
+		</div>
+
+	</div>
+
+</body>
+
+<script>
+
+//////////////
+// Data
+
+var audioManifest = [];
+var sourcesLeft = 2;
+var removeSource = function(){
+	sourcesLeft--;
+	if(sourcesLeft==0){
+		showRandom();
+	}
+};
+
+window.onload = function(){
+	loadNewgrounds();
+	loadSoundcloud();
+}
+
+var nowPlaying;
+var showRandom = function(){
+
+	var a = audioManifest[ Math.floor(Math.random()*audioManifest.length) ];
+	nowPlaying = a;
+
+	document.getElementById("now_playing").innerHTML = a.title+
+		" by "+a.attribution.name+" (from <a href='"+a.attribution.url+"'>"+a.attribution.source+"</a>)"+
+		"<br><br>"+
+		"<audio src="+a.preview.url+" controls preload='none'></audio>";
+
+};
+
+var addToLibrary = function(){
+	
+	var a = nowPlaying;
+	var infoDOM = document.createElement("div");
+	
+	infoDOM.innerHTML = "<button onclick='removeFromLibrary(event)'>remove</button>&nbsp;&nbsp;"+
+		a.title+
+		"<br/>"+
+		"<audio src="+a.preview.url+" controls preload='none'></audio>";
+	
+	infoDOM.manifestIndex = audioManifest.indexOf(a);
+
+	document.getElementById("library").appendChild(infoDOM);
+
+};
+
+var removeFromLibrary = function(event){
+	event.target.parentElement.remove();
+};
+
+var getLibraryList = function(){
+	var libraryList = [];
+	var libraryItems = document.getElementById("library").children;
+	for(var i=0;i<libraryItems.length;i++){
+		var index = libraryItems[i].manifestIndex;
+		var item = audioManifest[index];
+		libraryList.push(item);
+	}
+	return libraryList;
+};
+
+var showAttribution = function(){
+	var libraryList = getLibraryList();
+	window.open( "data:text/json,"+JSON.stringify(libraryList), "_blank" );
+};
+
+var downloadAll = function(){
+	var filesQuery = [];
+	var libraryList = getLibraryList();
+	for(var i=0;i<libraryList.length;i++){
+		var item = libraryList[i];
+		filesQuery.push(item.preview.url);
+	}
+	window.open( "/zip?files="+JSON.stringify(filesQuery), "_blank" );
+};
+
+/*
+var a = audioManifest[i];
+
+*/
+
+
+//////////////
+// Newgrounds: PAGE SCRAPE
+
+var loadNewgrounds = function(){
+
+	GET("http://ncase-proxy.herokuapp.com/www.newgrounds.com/audio/browse/sort/score/interval/month",function(response){
+
+		var sandbox = document.createElement("div");
+		sandbox.innerHTML = response;
+		
+		var doms = sandbox.querySelectorAll(".podcontent .audiolist tr");
+		
+		for(var i=0;i<doms.length;i++){
+			
+			var dom =doms[i];
+			var title = dom.children[0].children[0].innerText;
+			var attr_link = dom.children[0].children[0].href;
+			var username = dom.children[2].children[0].children[0].innerText.trim();
+
+			var id = /(\d+)/.exec(attr_link)[0];
+			var preview_link = "http://www.newgrounds.com/audio/download/"+id;
+
+			audioManifest.push({
+				title: title,
+				attribution: {
+					name: username,
+					url: attr_link,
+					source: "Newgrounds"
+				},
+				preview: {
+					url: preview_link
+				}
+			});
+
+		}
+
+		removeSource();
+
+	});
+
+};
+
+
+//////////////
+// Soundcloud: Actual API
+
+var loadSoundcloud = function(){
+
+	GET("http://api.soundcloud.com/tracks.json?client_id=d071ba5d60938dbdbfba23eb231cd889&order=hotness&limit=50",function(response){
+
+		var infos = JSON.parse(response);
+		for(var i=0;i<infos.length;i++){
+			
+			var info = infos[i];
+			var title = info.title;
+			var attr_link = info.permalink_url;
+			var username = info.user.username;
+
+			var preview_link = info.stream_url+"?client_id=d071ba5d60938dbdbfba23eb231cd889";
+
+			audioManifest.push({
+				title: title,
+				attribution: {
+					name: username,
+					url: attr_link,
+					source: "Soundcloud"
+				},
+				preview: {
+					url: preview_link
+				}
+			});
+
+		}
+
+		removeSource();
+
+	});
+
+};
+
+
+//////////////
+// AJAX
+
+var GET = function(url,callback){
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET",url);
+	xhr.onreadystatechange = function() {
+	    if (xhr.readyState === 4 && xhr.status === 200) {
+	        var response = xhr.responseText;
+	        callback(response);
+	    }
+	};
+	xhr.send();
+};
+
+
+</script>

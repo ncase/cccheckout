@@ -1,0 +1,63 @@
+body {
+	margin:0;
+	font-family: Open Sans;
+}
+
+#header {
+	margin: 80px 0 20px 0;
+	text-align: center;
+	font-size: 32px;
+}
+
+#music_cont {
+	width: 600px;
+	margin: 0 auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+	padding: 50px;
+}
+#now_playing {
+	text-align: center;
+	font-size: 20px;
+}
+
+#library {
+	padding:10px;
+	overflow: hidden;
+}
+#library div {
+	padding: 10px;
+	width: 300px;
+	margin: 0 auto;
+}
+
+.button {
+
+	cursor: pointer;
+	border-radius: 50px;
+	text-align: center;
+	margin: 20px auto;
+	position: relative;
+	padding: 5px;
+	background: black;
+	color: white;
+	font-size: 20px;
+	width: 160px;
+
+}
+.button:hover {
+	background: #333;
+	top:-1px;
+}
+
+.button {
+	float:left;
+	margin-bottom:0;
+}
+#attribute_all {
+	width:230px;
+	margin-left:20px
+}
+#add_to_library {
+	margin-left:20px
+}
+
