@@ -16,7 +16,13 @@ app.get('/zip', function(req, res) {
 
 	// GET list
 	var files = req.query["files"];
+	if(!files){
+		res.end();
+	}
 	files = JSON.parse(files);
+	if(files.length==0){
+		res.end();
+	}
 
 	// Zip Response
 	res.contentType('zip');
@@ -24,9 +30,9 @@ app.get('/zip', function(req, res) {
 	zip.pipe(res);
 
 	// Use Config
-	zip.addFile( "And here's where the attribution info would go later", { name:"README.txt", store:true }, function(){
-		addFileToZip( files, 0, zip, req, res );
-	});
+	//zip.addFile( "And here's where the attribution info would go later", { name:"README.txt", store:true }, function(){
+	addFileToZip( files, 0, zip, req, res );
+	//});
 
 });
 
