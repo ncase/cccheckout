@@ -4,7 +4,9 @@
 	"version": "0.0.1",
 
 	"dependencies": {
-		"express": "latest"
+		"express": "latest",
+		"zipstream": "latest",
+		"request": "latest"
 	},
 
 	"engines": {
